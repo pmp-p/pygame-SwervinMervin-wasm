@@ -7,18 +7,19 @@ import sprite as sp
 import tunnel_entrance as te
 import tunnel_inside as ti
 
+
 class Level:
     """Represents a level in the game world."""
 
     def __init__(self, details):
-        self.name        = details["name"]
-        self.slug        = details["id"]
-        self.song        = details["song"]
-        self.laps        = details["laps"]
-        self.backgrounds = map(lambda bg: b.Background(bg["id"], bg["speed"], bg["scale"], bg["convert"]), details["backgrounds"])
-        self.palettes    = details["colours"]
-        self.finished    = False
-        self.segments    = []
+        self.name = details["name"]
+        self.slug = details["id"]
+        self.song = details["song"]
+        self.laps = details["laps"]
+        self.backgrounds = [b.Background(bg["id"], bg["speed"], bg["scale"], bg["convert"]) for bg in details["backgrounds"]]
+        self.palettes = details["colours"]
+        self.finished = False
+        self.segments = []
         self.competitors = []
 
     def build(self):
@@ -27,12 +28,11 @@ class Level:
 
         with open(build_path("tracks"), "r") as csvfile:
             for row in csv.reader(csvfile):
-                flts = map(lambda c: float(c), row)
+                flts = [float(c) for c in row]
                 self.add_segment(*flts)
 
         with open(build_path("sprites"), "r") as csvfile:
             for row in csv.reader(csvfile):
-
                 if row[1] == "speed_boost":
                     self.add_speed_boost(int(row[0]), float(row[2]))
                 else:
@@ -99,7 +99,7 @@ class Level:
                 self.add_sprite(segment, "tunnel_light", -1.0, 2.0)
                 self.add_sprite(segment, "tunnel_light", 1.0, 2.0)
 
-        self.segments[end-1].tunnel_end = True
+        self.segments[end - 1].tunnel_end = True
         self.add_polygon(self.segments[start], ti.TunnelInside, "pre")
         self.add_polygon(self.segments[start], te.TunnelEntrance, "post", [self.palettes["wall"]])
 

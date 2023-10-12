@@ -2,15 +2,16 @@ import pygame, os
 import settings as s
 import world_object as wo
 
+
 class Competitor(wo.WorldObject):
     """Represents a single competitor car in a level."""
 
     def __init__(self, position, offset, name, speed):
-        self.position   = position * s.SEGMENT_HEIGHT
-        self.offset     = offset
-        self.offset_y   = 0.0
-        self.sprite     = s.SPRITES[name]
-        self.speed      = speed
+        self.position = position * s.SEGMENT_HEIGHT
+        self.offset = offset
+        self.offset_y = 0.0
+        self.sprite = s.SPRITES[name]
+        self.speed = speed
         self.engine_sfx = pygame.mixer.Sound(os.path.join("lib", "engine.ogg"))
 
         self.engine_sfx.set_volume(0)
@@ -31,7 +32,7 @@ class Competitor(wo.WorldObject):
 
     def play_engine(self, player_position):
         """Plays or stops the engine depending on how far away this competitor is
-           from the player."""
+        from the player."""
         v = self.__engine_volume(player_position)
 
         if v > 0:
@@ -47,7 +48,7 @@ class Competitor(wo.WorldObject):
 
     def __engine_volume(self, player_position):
         """Returns a value between 0.0 and 1.0 to indicate how loud this competitors engine
-           will sound from the persperctive of the player."""
+        will sound from the persperctive of the player."""
         distance = abs(self.position - player_position)
 
         if distance > s.MINIMUM_ENGINE_DIST:

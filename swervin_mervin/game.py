@@ -1,3 +1,4 @@
+import asyncio
 import pygame, sys, os, math, random
 from pygame.locals import *
 import player as p
@@ -10,25 +11,26 @@ import high_scores as hs
 import credits as c
 import util as u
 
+
 class Game:
     """Provides the game flow."""
 
     def __init__(self, window, clock):
-        self.window          = window
-        self.clock           = clock
-        self.paused          = False
-        self.waiting         = False
+        self.window = window
+        self.clock = clock
+        self.paused = False
+        self.waiting = False
         self.selected_player = 0
-        self.player          = None
-        self.level           = None
-        self.high_scores     = hs.HighScores()
+        self.player = None
+        self.level = None
+        self.high_scores = hs.HighScores()
 
-    def play(self):
+    async def play(self):
         if s.TITLE_SCREEN:
-            self.__title_screen()
+            await self.__title_screen()
 
         if s.PLAYER_SELECT:
-            self.__player_select()
+            await self.__player_select()
 
         self.player = p.Player(self.high_scores.minimum_score(), self.selected_player)
 
@@ -39,7 +41,7 @@ class Game:
             self.level.build()
 
             if s.COUNTDOWN:
-                self.__countdown(i + 1)
+                await self.__countdown(i + 1)
 
             pygame.mixer.music.load(os.path.join("lib", self.level.song))
             pygame.mixer.music.play(-1)
@@ -47,12 +49,13 @@ class Game:
 
             while not self.player.finished():
                 if self.paused:
-                    self.__pause_cycle()
+                    await self.__pause_cycle()
                 else:
                     self.__game_cycle()
 
                 pygame.display.update()
-                self.clock.tick(s.FPS)
+                # self.clock.tick(s.FPS)
+                await asyncio.sleep(0)
 
             pygame.mixer.music.fadeout(1500)
 
@@ -60,7 +63,7 @@ class Game:
                 break
 
         if self.player.alive():
-            self.__credits_screen()
+            await self.__credits_screen()
 
         ## Post-game high scores and wait for new player.
         if self.high_scores.is_high_score(self.player.points):
@@ -68,21 +71,21 @@ class Game:
 
         self.waiting = True
 
-    def wait(self):
+    async def wait(self):
         """Shows high scores until a new player is ready."""
 
         heading_font = pygame.font.Font(s.FONTS["fipps"], 44)
         content_font = pygame.font.Font(s.FONTS["retro_computer"], 15)
-        background   = pygame.image.load(os.path.join("lib", "title.png"))
+        background = pygame.image.load(os.path.join("lib", "title.png"))
         heading_text = heading_font.render("High Scores", 1, s.COLOURS["text"])
-        y            = 120
+        y = 120
 
         self.window.fill(s.COLOURS["black"])
         self.window.blit(background, (0, 0))
         self.window.blit(heading_text, (30, 3))
 
         for score in self.high_scores.high_scores:
-            date_text  = content_font.render(score[0].strftime("%d %b %Y"), 1, s.COLOURS["text"])
+            date_text = content_font.render(score[0].strftime("%d %b %Y"), 1, s.COLOURS["text"])
             score_text = content_font.render(str(score[1]), 1, s.COLOURS["text"])
 
             self.window.blit(date_text, (30, y))
@@ -97,16 +100,18 @@ class Game:
 
                 if e.type == KEYDOWN and e.key in [K_UP, K_RETURN]:
                     self.waiting = False
-     
-            self.clock.tick(s.FPS)
 
+            # self.clock.tick(s.FPS)
+            await asyncio.sleep(0)
+
+    #    async
     def __game_cycle(self):
         p = self.player
         l = self.level
 
         p.travel(l.track_length(), self.window)
 
-        base_segment   = l.find_segment(p.position)
+        base_segment = l.find_segment(p.position)
         player_segment = l.find_segment(p.position + s.PLAYER_Z)
 
         p.accelerate()
@@ -133,10 +138,10 @@ class Game:
                     old_seg.competitors.remove(c)
                 new_seg.competitors.append(c)
 
-        coverage    = [base_segment, base_segment, base_segment]
+        coverage = [base_segment, base_segment, base_segment]
         tunnel_exit = base_segment
         pre_renders = []
-        curve       = 0
+        curve = 0
         curve_delta = -(base_segment.curve * p.segment_percent())
 
         # Position backgrounds according to current curve.
@@ -147,28 +152,25 @@ class Game:
 
         # Loop through segments we should draw for this frame.
         for i in range(s.DRAW_DISTANCE):
-            segment            = l.offset_segment(base_segment.index + i)
+            segment = l.offset_segment(base_segment.index + i)
             projected_position = p.position
-            camera_x           = p.x * s.ROAD_WIDTH
+            camera_x = p.x * s.ROAD_WIDTH
 
             # Past end of track and looped back.
             if segment.index < base_segment.index:
                 projected_position -= l.track_length()
 
-            segment.project(camera_x,
-              curve,
-              curve_delta,
-              projected_position,
-              p.y)
+            segment.project(camera_x, curve, curve_delta, projected_position, p.y)
 
-            curve       += curve_delta
+            curve += curve_delta
             curve_delta += segment.curve
 
             # Remember biggest LEFT, TOP, RIGHT coordinates so we can clip sprites later.
             segment.clip = [
-              coverage[0].bottom["screen"]["x"] - coverage[0].bottom["screen"]["w"],
-              coverage[1].top["screen"]["y"],
-              coverage[2].bottom["screen"]["x"] + coverage[2].bottom["screen"]["w"]]
+                coverage[0].bottom["screen"]["x"] - coverage[0].bottom["screen"]["w"],
+                coverage[1].top["screen"]["y"],
+                coverage[2].bottom["screen"]["x"] + coverage[2].bottom["screen"]["w"],
+            ]
 
             if len(segment.pre_polygons) > 0:
                 pre_renders.append(segment)
@@ -182,15 +184,15 @@ class Game:
             segment.render_grass(self.window)
             segment.render_road(self.window)
 
-            if (segment.top["screen"]["y"] > coverage[1].top["screen"]["y"]):
+            if segment.top["screen"]["y"] > coverage[1].top["screen"]["y"]:
                 coverage[1] = segment
 
             # Remember where we should draw the left and right tunnel walls.
             if segment.in_tunnel:
-                s_top  = segment.top["screen"]
+                s_top = segment.top["screen"]
                 tl_top = coverage[0].top["screen"]
                 tr_top = coverage[2].top["screen"]
-                
+
                 if (s_top["x"] - s_top["w"]) > (tl_top["x"] - tl_top["w"]):
                     coverage[0] = segment
 
@@ -215,7 +217,7 @@ class Game:
         for segment in reversed(pre_renders):
             segment.render_polygons(self.window, coverage)
 
-        for i in reversed(range(1, s.DRAW_DISTANCE)):
+        for i in reversed(list(range(1, s.DRAW_DISTANCE))):
             segment = l.offset_segment(base_segment.index + i)
             segment.render_world_objects(self.window)
 
@@ -240,8 +242,8 @@ class Game:
     def __pause_cycle(self):
         pause_font = pygame.font.Font(s.FONTS["retro_computer"], 64)
         pause_text = pause_font.render("Paused", 1, s.COLOURS["text"])
-        x          = (s.DIMENSIONS[0] - pause_text.get_width()) / 2
-        y          = (s.DIMENSIONS[1] - pause_text.get_height()) / 2
+        x = (s.DIMENSIONS[0] - pause_text.get_width()) / 2
+        y = (s.DIMENSIONS[1] - pause_text.get_height()) / 2
 
         self.window.fill(s.COLOURS["black"])
         self.window.blit(pause_text, (x, y))
@@ -253,28 +255,29 @@ class Game:
                 pygame.mixer.music.unpause()
                 self.paused = False
 
-    def __progress(self, screen, fps):
+    async def __progress(self, screen, fps):
         while not screen.finished:
             screen.progress(self.window)
 
             pygame.display.update()
-            self.clock.tick(fps)
+            # self.clock.tick(fps)
+            await asyncio.sleep(0)
 
-    def __title_screen(self):
+    async def __title_screen(self):
         title_screen = ts.TitleScreen()
         pygame.mixer.music.load(os.path.join("lib", "mn84-theme.ogg"))
         pygame.mixer.music.play(-1)
-        self.__progress(title_screen, s.TITLE_FPS)
+        await self.__progress(title_screen, s.TITLE_FPS)
 
-    def __countdown(self, level_number):
+    async def __countdown(self, level_number):
         countdown = cd.CountDown(level_number, self.level.name)
-        self.__progress(countdown, s.COUNTDOWN_FPS)
+        await self.__progress(countdown, s.COUNTDOWN_FPS)
 
-    def __player_select(self):
+    async def __player_select(self):
         player_select = ps.PlayerSelect()
-        self.__progress(player_select, s.PLAYER_SELECT_FPS)
+        await self.__progress(player_select, s.PLAYER_SELECT_FPS)
         self.selected_player = player_select.selected
 
-    def __credits_screen(self):
+    async def __credits_screen(self):
         credits = c.Credits()
-        self.__progress(credits, s.CREDITS_FPS)
+        await self.__progress(credits, s.CREDITS_FPS)

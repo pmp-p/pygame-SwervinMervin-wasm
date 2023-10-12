@@ -1,7 +1,8 @@
 import json, os
 import datetime as dt
 
-class HighScores():
+
+class HighScores:
     """Wrapper over the high scores file."""
 
     def __init__(self):
@@ -11,7 +12,7 @@ class HighScores():
     def is_high_score(self, score):
         scores = self.__scores_only()
 
-        return any(map(lambda n: score > n, scores))
+        return any([score > n for n in scores])
 
     def minimum_score(self):
         """returns the minimum score required to be on the high score list."""
@@ -34,19 +35,19 @@ class HighScores():
         self.high_scores.reverse()
 
     def __write_high_scores(self):
-        hs    = open(os.path.join("dat", "highscores"), "w")
-        jdata = map(lambda hs: [hs[0].strftime("%Y-%m-%d"), hs[1]], self.high_scores)
+        hs = open(os.path.join("dat", "highscores"), "w")
+        jdata = [[hs[0].strftime("%Y-%m-%d"), hs[1]] for hs in self.high_scores]
 
         json.dump(jdata, hs)
         hs.close()
 
     def __read_high_scores(self):
-        hs  = open(os.path.join("dat", "highscores"), "r")
-        jhs = map(lambda hs: [dt.datetime.strptime(hs[0], "%Y-%m-%d"), hs[1]], json.load(hs))
+        hs = open(os.path.join("dat", "highscores"), "r")
+        jhs = [[dt.datetime.strptime(hs[0], "%Y-%m-%d"), hs[1]] for hs in json.load(hs)]
 
         hs.close()
 
         return jhs
 
     def __scores_only(self):
-        return map(lambda hs: hs[1], self.high_scores)
+        return [hs[1] for hs in self.high_scores]

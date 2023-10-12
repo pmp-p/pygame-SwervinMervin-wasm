@@ -8,6 +8,7 @@
 
 import random
 
+
 def sprites(amount, start, names, steps, pos, y):
     z = start
 
@@ -16,4 +17,4 @@ def sprites(amount, start, names, steps, pos, y):
         spos = random.uniform(*pos)
         z += random.randint(*steps)
 
-        print "%d,%s,%.2f,%.1f" % (z, stype, spos, y)
+        print("%d,%s,%.2f,%.1f" % (z, stype, spos, y))

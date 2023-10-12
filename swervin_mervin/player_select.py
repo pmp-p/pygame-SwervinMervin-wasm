@@ -2,26 +2,29 @@ import pygame, os
 import settings as s
 import util as u
 
-class PlayerSelect():
+
+class PlayerSelect:
     """Displays a player selection screen."""
 
     def __init__(self):
-        self.selected         = 0
-        self.finished         = False
-        self.player_chosen    = False
+        self.selected = 0
+        self.finished = False
+        self.player_chosen = False
         self.selection_colour = 0
-        self.background       = pygame.image.load(os.path.join("lib", "player_select.png"))
-        self.fonts            = {"title": pygame.font.Font(s.FONTS["fipps"], 38),
-                                 "name": pygame.font.Font(s.FONTS["retro_computer"], 18),
-                                 "details": pygame.font.Font(s.FONTS["retro_computer"], 12),
-                                 "stats": pygame.font.Font(s.FONTS["retro_computer"], 8)}
-        
+        self.background = pygame.image.load(os.path.join("lib", "player_select.png"))
+        self.fonts = {
+            "title": pygame.font.Font(s.FONTS["fipps"], 38),
+            "name": pygame.font.Font(s.FONTS["retro_computer"], 18),
+            "details": pygame.font.Font(s.FONTS["retro_computer"], 12),
+            "stats": pygame.font.Font(s.FONTS["retro_computer"], 8),
+        }
+
     def progress(self, window):
-        txt_title     = self.fonts["title"].render("Player Select", 1, s.COLOURS["text"])
-        player        = s.PLAYERS[self.selected]
-        lpad          = 40
-        start_point   = (s.DIMENSIONS[0] / 2) + (lpad / 2)
-        step          = player["sprites"]["mugshot_small"]["width"]
+        txt_title = self.fonts["title"].render("Player Select", 1, s.COLOURS["text"])
+        player = s.PLAYERS[self.selected]
+        lpad = 40
+        start_point = (s.DIMENSIONS[0] / 2) + (lpad / 2)
+        step = player["sprites"]["mugshot_small"]["width"]
         large_mugshot = pygame.image.load(os.path.join("lib", player["sprites"]["mugshot_large"]["path"]))
 
         self.selection_colour = 1 if self.selection_colour == 0 else 0
@@ -32,16 +35,19 @@ class PlayerSelect():
         for i, p in enumerate(s.PLAYERS):
             details = p["sprites"]["mugshot_small"]
             mugshot = pygame.image.load(os.path.join("lib", details["path"]))
-            x       = start_point + (i * (step + lpad))
-            y       = 120
+            x = start_point + (i * (step + lpad))
+            y = 120
 
             window.blit(mugshot, (x, y))
 
             if i == self.selected:
                 bw = 10
-                pygame.draw.rect(window, 
-                  s.COLOURS["selection"][self.selection_colour],
-                  [x - (bw / 2), y - (bw / 2), details["width"] + bw, details["width"] + bw], bw)
+                pygame.draw.rect(
+                    window,
+                    s.COLOURS["selection"][self.selection_colour],
+                    [x - (bw / 2), y - (bw / 2), details["width"] + bw, details["width"] + bw],
+                    bw,
+                )
 
         # Player name and picture.
         window.blit(large_mugshot, (0, s.DIMENSIONS[1] - player["sprites"]["mugshot_large"]["height"]))
@@ -64,17 +70,11 @@ class PlayerSelect():
         window.blit(su, (start_point + 105, 309))
         window.blit(su, (start_point + 105, 333))
 
-        pygame.draw.rect(window, 
-          s.COLOURS["text"],
-          [start_point + 105, 285, desired_acceleration, 18])
+        pygame.draw.rect(window, s.COLOURS["text"], [start_point + 105, 285, desired_acceleration, 18])
 
-        pygame.draw.rect(window, 
-          s.COLOURS["text"],
-          [start_point + 105, 309, desired_handling, 18])
+        pygame.draw.rect(window, s.COLOURS["text"], [start_point + 105, 309, desired_handling, 18])
 
-        pygame.draw.rect(window, 
-          s.COLOURS["text"],
-          [start_point + 105, 333, desired_top_speed, 18])
+        pygame.draw.rect(window, s.COLOURS["text"], [start_point + 105, 333, desired_top_speed, 18])
 
         if self.player_chosen:
             self.finalise_selection(player)

@@ -17,11 +17,11 @@ else:
     w_flag = 0
 
 fps_clock = pygame.time.Clock()
-window    = pygame.display.set_mode(s.DIMENSIONS, w_flag)
-game      = g.Game(window, fps_clock)
+window = pygame.display.set_mode(s.DIMENSIONS, w_flag)
+game = g.Game(window, fps_clock)
 
 while True:
-   if game.waiting:
-       game.wait()
-   else:
-       game.play()
+    if game.waiting:
+        game.wait()
+    else:
+        game.play()
