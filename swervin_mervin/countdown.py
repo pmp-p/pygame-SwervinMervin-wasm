@@ -20,7 +20,7 @@ class CountDown:
         cd_text = self.cd_font.render(txt, 1, s.COLOURS["text"])
         level_text = self.text_font.render("Level %d: %s" % (self.level_number, self.level_name), 1, s.COLOURS["text"])
         freq = 440 if self.remaining > 0 else 570
-        beep = pygame.mixer.Sound(os.path.join("lib", "%d.wav" % freq))
+        beep = pygame.mixer.Sound(os.path.join("lib", "%d.ogg" % freq))
 
         window.fill(s.COLOURS["black"])
         window.blit(level_text, u.middle(level_text, y=25))

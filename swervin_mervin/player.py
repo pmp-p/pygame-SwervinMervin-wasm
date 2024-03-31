@@ -284,7 +284,7 @@ class Player:
             else:
                 self.lap += 1
 
-                lap_sfx = pygame.mixer.Sound(os.path.join("lib", "570.wav"))
+                lap_sfx = pygame.mixer.Sound(os.path.join("lib", "570.ogg"))
                 lap_sfx.play()
 
             if self.status != PlayerStatus.game_over:
